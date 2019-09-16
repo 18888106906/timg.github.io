@@ -1,0 +1,26 @@
+DATE=$(date +%Y%m%d)
+echo "$DATE"
+#获取当前时间(YYYYMMDD)
+DATE1=$(date -v-5d +"%Y%m%d")
+echo "$DATE1"
+#获取5天前的时间(YYYYMMDD)
+DIR=/Users/zhangtao/Desktop/copy
+cd $DIR
+
+NUM=$(ls -l |grep "^d"|wc -l)
+#计算当前文件夹下的目录个数
+echo "num=$NUM"
+
+if [ ! -d $DIR/$DATE ];then
+  mkdir $DIR/$DATE
+fi
+
+cd $DIR/$DATE
+ 
+git clone --mirror username@host:/home/javadev/git/transport.git
+
+if [ "$NUM" -gt '4' ];then
+   if [ -e $DIR/$DATE1 ];then
+     rm -rf $DIR/$DATE1
+   fi
+fi
