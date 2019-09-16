@@ -1,0 +1,187 @@
+//
+//  main.cpp
+//  transport_jni
+//
+//  Created by zhuhuijun on 2018/11/23.
+//  Copyright © 2018 zhuhuijun. All rights reserved.
+//
+
+#include <iostream>
+#include <vector>
+#include <stdio.h>
+#include "../include/com_feisuo_transport_common_simulation_SimulationJni.h"
+#include "../include/fs_query_engine_api.hpp"
+
+
+int main(int argc, const char * argv[]) {
+    return 0;
+}
+
+JNIEXPORT void JNICALL Java_com_feisuo_transport_common_simulation_SimulationJni_initSimulation
+(JNIEnv *env, jobject obj){
+    //fs_query_engine_api* se = new fs_query_engine_api();
+    //se->testPrint();
+    jni::testPrint();
+     std::string path ="/Users/zhangtao/Desktop/workspace/transport/src/main/resources/fs_config.cfg";
+    jni::fs_init(path);
+    //abcd();
+};
+JNIEXPORT jobject JNICALL Java_com_feisuo_transport_common_simulation_SimulationJni_queryEdgeRange
+(JNIEnv *env, jobject obj,jdouble left, jdouble bottom, jdouble right, jdouble top){
+    double cleft = (double) left;
+    double cbottom = (double) bottom;
+    double cright = (double) right;
+    double ctop = (double) top;
+    //fs_query_engine_api* se = new fs_query_engine_api(" ");
+    //int  fs_query_edge_range(double left, double bottom, double right, double top, std::vector<std::vector< fs_position_trans>>&);  //get edge in range
+    std::vector<std::vector<jni::fs_position_trans>> v;
+    //param//double left, double bottom, double right, double top,
+    //std::vector<std::vector< fs_position_trans>>&
+    jni::fs_query_edge_range(cleft,cbottom,cright,ctop,v);
+    //get java class
+    jclass java_util_ArrayList = env->FindClass("java/util/ArrayList");
+    //jclass java_lang_Double = env->FindClass("java/lang/Double");
+    //get java method
+    jmethodID java_util_ArrayList_     = env->GetMethodID(java_util_ArrayList, "<init>", "()V");
+    jmethodID java_util_ArrayList_add  = env->GetMethodID(java_util_ArrayList, "add", "(Ljava/lang/Object;)Z");
+    //jmethodID java_lang_Double_  = env->GetMethodID(java_lang_Double, "<init>", "(D)V");
+    //init ArrayList
+    jobject obj_ArrayList = env->NewObject(java_util_ArrayList,java_util_ArrayList_);
+    
+    //创建对象
+    //1.jobject AllocObject(JNIEnv *env, jclass clazz);
+    for(auto e:v){
+        jobject obj_ArrayList_inner = env->NewObject(java_util_ArrayList,java_util_ArrayList_);
+        for(auto ee:e){
+            jdouble tem[2] = {(jdouble)ee.longitude,(jdouble)ee.latitude};
+            jdoubleArray double_array = env->NewDoubleArray(2);
+            env->SetDoubleArrayRegion(double_array, 0, 2,tem);
+            env->CallObjectMethod(obj_ArrayList_inner,java_util_ArrayList_add,double_array);
+        }
+        env->CallObjectMethod(obj_ArrayList,java_util_ArrayList_add,obj_ArrayList_inner);
+    }
+    
+    return obj_ArrayList;
+};
+
+JNIEXPORT jobject JNICALL Java_com_feisuo_transport_common_simulation_SimulationJni_queryStationRange
+(JNIEnv *env, jobject obj,jdouble left, jdouble bottom, jdouble right, jdouble top){
+    double cleft = (double) left;
+    double cbottom = (double) bottom;
+    double cright = (double) right;
+    double ctop = (double) top;
+    //fs_query_engine_api* se = new fs_query_engine_api();
+    //bool init(std::string & path);
+    
+    //int fs_query_station_range(double left, double bottom, double right, double top,std::vector<std::uint16_t>& res); //get station in range
+    std::vector<std::uint16_t> v;
+    //auto g = new MapData::Graph;
+    //param//double left, double bottom, double right, double top,std::vector<fs_position_trans>& res
+    //se->fs_query_station_range(cleft,cbottom,cright,ctop,MapData::Graph * const);
+    jni::fs_query_station_range(cleft,cbottom,cright,ctop,v);
+    //get java class
+    jclass java_util_ArrayList = env->FindClass("java/util/ArrayList");
+    jclass java_lang_Integer = env->FindClass("java/lang/Integer");
+    //get java method
+    jmethodID java_util_ArrayList_     = env->GetMethodID(java_util_ArrayList, "<init>", "()V");
+    jmethodID java_util_ArrayList_add  = env->GetMethodID(java_util_ArrayList, "add", "(Ljava/lang/Object;)Z");
+    jmethodID java_lang_Integer_  = env->GetMethodID(java_lang_Integer, "<init>", "(I)V");
+    //init ArrayList
+    jobject obj_ArrayList = env->NewObject(java_util_ArrayList,java_util_ArrayList_);
+    
+    //创建对象
+    //1.jobject AllocObject(JNIEnv *env, jclass clazz);
+    for(auto e:v){
+        env->CallObjectMethod(obj_ArrayList,java_util_ArrayList_add,
+                              env->NewObject(java_lang_Integer,java_lang_Integer_,(jint)e));
+    }
+    return obj_ArrayList;
+};
+JNIEXPORT jobject JNICALL Java_com_feisuo_transport_common_simulation_SimulationJni_queryVehicleRange
+(JNIEnv *env, jobject obj, jdouble left, jdouble bottom, jdouble right, jdouble top){
+    double cleft = (double) left;
+    double cbottom = (double) bottom;
+    double cright = (double) right;
+    double ctop = (double) top;
+    std::vector<jni::fs_vehicle_trans> v;
+    jni::fs_query_veh_range(cleft,cbottom,cright,ctop,v);
+    //get java class
+    jclass java_util_ArrayList = env->FindClass("java/util/ArrayList");
+    jclass java_lang_Integer = env->FindClass("java/lang/Integer");
+    jclass java_d_dynamicveh = env->FindClass("com/feisuo/transport/pojo/DynamicVehicle");
+    //get java method
+    jmethodID java_util_ArrayList_ = env->GetMethodID(java_util_ArrayList, "<init>", "()V");
+    jmethodID java_util_ArrayList_add  = env->GetMethodID(java_util_ArrayList, "add", "(Ljava/lang/Object;)Z");
+    jmethodID java_d_dynamicveh_ = env->GetMethodID(java_d_dynamicveh, "<init>", "()V");
+    jmethodID java_lang_Integer_  = env->GetMethodID(java_lang_Integer, "<init>", "(I)V");
+    jmethodID java_dynamicveh_setid = env->GetMethodID(java_d_dynamicveh, "setId", "(Ljava/lang/Integer;)V");
+    jmethodID java_dynamicveh_setspeed = env->GetMethodID(java_d_dynamicveh, "setSpeed", "(D)V");
+    jmethodID java_dynamicveh_setacc = env->GetMethodID(java_d_dynamicveh, "setAcc", "(D)V");
+    jmethodID java_dynamicveh_setlon = env->GetMethodID(java_d_dynamicveh, "setLongtutude", "(D)V");
+    jmethodID java_dynamicveh_setlat = env->GetMethodID(java_d_dynamicveh, "setLatitude", "(D)V");
+    //init ArrayList
+    jobject obj_ArrayList = env->NewObject(java_util_ArrayList,java_util_ArrayList_);
+    
+    //创建对象
+    //1.jobject AllocObject(JNIEnv *env, jclass clazz);
+    
+    for(auto e:v){
+        jobject obj_d_veh = env->NewObject(java_d_dynamicveh,java_d_dynamicveh_);
+        env->CallObjectMethod(obj_d_veh,java_dynamicveh_setid,
+                              env->NewObject(java_lang_Integer,java_lang_Integer_,(jint)e.id));
+        env->CallObjectMethod(obj_d_veh,java_dynamicveh_setspeed,(jdouble)e.v);
+        env->CallObjectMethod(obj_d_veh,java_dynamicveh_setacc,(jdouble) e.acc);
+        //env->CallObjectMethod(obj_d_veh,java_dynamicveh_setlon,e.pos.first);
+        env->CallObjectMethod(obj_d_veh,java_dynamicveh_setlat,(jdouble) e.pos.latitude);
+        env->CallObjectMethod(obj_d_veh,java_dynamicveh_setlon,(jdouble) e.pos.longitude);
+        env->CallObjectMethod(obj_ArrayList,java_util_ArrayList_add,obj_d_veh);
+    }
+
+    return obj_ArrayList;
+};
+JNIEXPORT jobject JNICALL Java_com_feisuo_transport_common_simulation_SimulationJni_queryPath
+(JNIEnv *env, jobject object, jint dept_id, jint dest_id){
+    std::vector<jni::fs_position_trans> rest;
+    jni::fs_query_path(dept_id,dest_id,rest);
+    
+    //int fs_query_path(fs_nodeid_t_trans u, fs_nodeid_t_trans v,std::vector<fs_position_trans>* res);   //precalculate path
+    jclass list_cls = env->FindClass("Ljava/util/ArrayList;");
+    
+    jmethodID list_costruct = env->GetMethodID(list_cls , "<init>","()V"); //Get the constructor
+    
+    jobject list_obj = env->NewObject(list_cls , list_costruct); //Create an Arraylist collection object
+    
+    //get the add() method ID in the Arraylist class;
+    jmethodID list_add  = env->GetMethodID(list_cls,"add","(Ljava/lang/Object;)Z");
+    
+    //jclass douArrayClass = env->FindClass("[Ljava/lang/double;");
+    
+    
+    for(jint i = 0; i<rest.size();i++){
+        jdouble tem[2] = {(jdouble)rest[i].longitude,(jdouble)rest[i].latitude};
+        //
+        jdoubleArray double_array = env->NewDoubleArray(2);
+        env->SetDoubleArrayRegion(double_array, 0, 2,tem);
+        env->CallBooleanMethod(list_obj , list_add , double_array);
+    }
+
+    return list_obj;
+}
+
+JNIEXPORT jobject JNICALL Java_com_feisuo_transport_common_simulation_SimulationJni_queryVehicleInfo
+(JNIEnv *env, jobject obj, jint vid){
+    //const fs_vehicle_trans* jni_fs_query_veh (fs_vehid_t_trans idv)
+    jclass veh_class = env->FindClass("com/feisuo/transport/pojo/DynamicVehicle");
+    jclass java_lang_Integer = env->FindClass("java/lang/Integer");
+    jmethodID java_lang_Integer_  = env->GetMethodID(java_lang_Integer, "<init>", "(I)V");
+    jmethodID veh_costruct = env->GetMethodID(veh_class , "<init>","(Ljava/lang/Integer;DDDD)V");
+    jni::fs_vehicle_trans res;
+    res = jni::fs_query_veh((std::uint16_t)vid);
+    jobject veh_ojb = env->NewObject(veh_class,veh_costruct,
+                                     env->NewObject(java_lang_Integer,java_lang_Integer_,(jint)res.id),
+                                     (jdouble)res.pos.longitude,
+                                     (jdouble)res.pos.latitude,
+                                     (jdouble)res.v,
+                                     (jdouble)res.acc);
+    return veh_ojb;
+    }
