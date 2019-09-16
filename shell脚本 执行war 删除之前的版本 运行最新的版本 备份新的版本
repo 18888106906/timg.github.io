@@ -1,0 +1,24 @@
+DATE=$(date +%Y%m%d)
+JAVA_HOME=/usr/java/jdk1.8
+PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
+CLASSPATH=.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib:$CLASSPATH
+DIR=/home/tzhang/jenkins
+JARFILE=transport-0.0.1-SNAPSHOT.war
+
+if [ ! -d $DIR/backup ];then
+  sudo mkdir -p $DIR/backup
+fi
+cd $DIR
+
+ps -ef | grep $JARFILE | grep -v grep | awk '{print $2}' | xargs kill -9
+sudo mv $JARFILE backup/$JARFILE$DATE
+sudo mv -f /home/tzhang/Jenkins-in/$JARFILE .
+
+java -jar $JARFILE > out.log &
+if [ $? = 0 ];then
+        sleep 30
+        tail -n 50 out.log
+fi
+
+cd backup/
+ls -lt|awk 'NR>5{print $NF}'|xargs rm -rf
