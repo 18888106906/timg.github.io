@@ -1,0 +1,133 @@
+public class FsHex {
+    private static String hexStr ="0123456789ABCDEF"; //全局
+    private byte[] _bytes;
+    private int _bytesPerLine;
+    private boolean _showHeader;
+    private boolean _showOffset;
+    private boolean _showAscii;
+
+    private int _length;
+
+    private int _index;
+    private StringBuilder _sb = new StringBuilder();
+
+    private FsHex(byte[] bytes, int bytesPerLine, boolean showHeader, boolean showOffset, boolean showAscii) {
+        _bytes = bytes;
+        _bytesPerLine = bytesPerLine;
+        _showHeader = showHeader;
+        _showOffset = showOffset;
+        _showAscii = showAscii;
+        _length = bytes.length;
+    }
+
+    public static String Dump(byte[] bytes) {
+        int bytesPerLine = 16;
+        boolean showHeader = true;
+        boolean showOffset = true;
+        boolean showAscii = true;
+        if (bytes == null) {
+            return "null";
+        }
+        return (new FsHex(bytes, bytesPerLine, showHeader, showOffset, showAscii)).Dump();
+    }
+
+    private String Dump() {
+        if (_showHeader) {
+            WriteHeader();
+        }
+        WriteBody();
+        return _sb.toString();
+    }
+
+    private void WriteHeader() {
+        if (_showOffset) {
+            _sb.append("Offset(h)  ");
+        }
+        for (int i = 0; i < _bytesPerLine; i++) {
+            _sb.append("0"+Integer.toHexString(i));
+            if (i + 1 < _bytesPerLine) {
+                _sb.append(" ");
+            }
+        }
+        _sb.append("\n");
+    }
+
+    private void WriteBody() {
+        while (_index < _length) {
+            if (_index % _bytesPerLine == 0) {
+                if (_index > 0) {
+                    if (_showAscii) {
+                        WriteAscii();
+                    }
+                    _sb.append("\n");
+                }
+
+                if (_showOffset) {
+                    WriteOffset();
+                }
+            }
+
+            WriteByte();
+            if (_index % _bytesPerLine != 0 && _index < _length) {
+                _sb.append(" ");
+            }
+        }
+
+        if (_showAscii) {
+            WriteAscii();
+        }
+    }
+
+    private void WriteOffset() {
+        int length = String.valueOf(Integer.toHexString(_index)).length();
+        String bu = "0";
+        for (; length < 7; length++) {
+            bu += "0";
+        }
+        _sb.append(bu+Integer.toHexString(_index)+"   ");
+    }
+
+    private void WriteByte() {
+        _sb.append(binaryToHexString(_bytes[_index]));
+        _index++;
+    }
+
+    private void WriteAscii() {
+        int backtrack = ((_index - 1) / _bytesPerLine) * _bytesPerLine;
+        int length = _index - backtrack;
+
+        // This is to fill up last string of the dump if it's shorter than _bytesPerLine
+
+        _sb.append(new char[(_bytesPerLine - length) * 3]);
+
+        _sb.append("   ");
+        for (int i = 0; i < length; i++) {
+            _sb.append(Translate(_bytes[backtrack + i]));
+
+        }
+
+    }
+    private String Translate(byte b)
+    {
+        StringBuffer sb = new StringBuffer();
+        char cha = (char)b;
+        sb.append(cha);
+        return b < 32 ? "." : sb.toString();
+        //return b < 32 ? "." : String.valueOf(b);
+        //return null;
+    }
+
+    public static String binaryToHexString(byte bytes){
+
+        String result = "";
+        String hex = "";
+
+        //字节高4位
+        hex = String.valueOf(hexStr.charAt((bytes&0xF0)>>4));
+        //字节低4位
+        hex += String.valueOf(hexStr.charAt(bytes&0x0F));
+        result +=hex;
+
+        return result;
+    }
+}
